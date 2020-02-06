@@ -18,14 +18,14 @@ PAYARA_HOME="/opt/payara/payara-${PAYARA_VERSION}"
 case "${PAYARA_VERSION}" in 
 	4.1.2.181)
 		# The below links are to 4.1.2.181
-		FULL="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara/4.1.2.181/payara-4.1.2.181.zip"
-		WEB="https://search.maven.org/remotecontent?filepath=fish/payara/blue/distributions/payara-web/4.1.2.181/payara-web-4.1.2.181.zip"
-		MINIMAL=""
-		MICRO=""
-		EMBEDDED_FULL=""
-		EMBEDDED_WEB=""
-		MULTI_LANGUAGE_FULL="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-ml/4.1.2.181/payara-ml-4.1.2.181.zip"
-		MULTI_LANGUAGE_WEB="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-web-ml/4.1.2.181/payara-web-ml-4.1.2.181.zip"
+		FULL=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara/4.1.2.181/payara-4.1.2.181.zip
+		WEB=https://search.maven.org/remotecontent?filepath=fish/payara/blue/distributions/payara-web/4.1.2.181/payara-web-4.1.2.181.zip
+		MINIMAL=
+		MICRO=
+		EMBEDDED_FULL=
+		EMBEDDED_WEB=
+		MULTI_LANGUAGE_FULL=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-ml/4.1.2.181/payara-ml-4.1.2.181.zip
+		MULTI_LANGUAGE_WEB=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-web-ml/4.1.2.181/payara-web-ml-4.1.2.181.zip
 	;;
 	\*)
 		echo "unknown version number"
@@ -73,28 +73,20 @@ installOracleJDK8() {
 
 # Download and unzip to /opt/payara
 installPayara() {
-	echo "Provisioning Payara-$PAYARA_VERSION $PAYARA_ED to $PAYARA_HOME"
-
-	echo "Downloading Payara $PAYARA_VERSION"
-	wget -q $PAYARA_ED -O temp.zip > /dev/null    # Download Payara
-	mkdir -p $PAYARA_HOME                         # Make dirs for Payara
-	unzip -qq temp.zip -d $PAYARA_HOME            # unzip Payara to dir
-	rm temp.zip                                   # cleanup temp file
-
-	echo "Enabling secure admin mode for domains (u/p = admin/payara0payara)"
-	PWDFILE=/tmp/pwdfile
-	DOMAINS_DIR="${PAYARA_HOME}/payara41/glassfish/domains"
-	echo "AS_ADMIN_PASSWORD=payara0payara" > ${PWDFILE}
-	for DOMAIN in domain1 payaradomain; do
-		echo "admin;{SSHA256}Rzyr/2/C1Zv+iZyIn/VnL0zDYESs8nTH8t/OMlOpazehMGn5L9ejkg==;asadmin" > "${DOMAINS_DIR}/${DOMAIN}/config/admin-keyfile"
-		${PAYARA_HOME}/payara41/bin/asadmin start-domain ${DOMAIN}
-		${PAYARA_HOME}/payara41/bin/asadmin --user admin --passwordfile "${PWDFILE}" enable-secure-admin
-		${PAYARA_HOME}/payara41/bin/asadmin stop-domain ${DOMAIN}
-	done
-	rm "${PWDFILE}"
+	echo "Provisioning Payara-${PAYARA_VERSION} ${PAYARA_ED} to ${PAYARA_HOME}"
 	
-	echo "Setting ownership of ${PAYARA_HOME} content"
-	chown -R vagrant:vagrant $PAYARA_HOME         # Make sure vagrant owns dir
+	echo "running update..."
+	sudo apt-get -qqy update                      # Update the repos 
+	
+	echo "installing openjdk and unzip"
+	sudo apt-get -qqy install openjdk-7-jdk       # Install JDK 7 
+	sudo apt-get -qqy install unzip               # Install unzip 
+	
+	echo "Downloading Payara ${PAYARA_VERSION}"
+	wget -q ${PAYARA_ED} -O temp.zip > /dev/null    # Download Payara 
+	sudo mkdir -p ${PAYARA_HOME}                    # Make dirs for Payara 
+	unzip -qq temp.zip -d ${PAYARA_HOME}            # unzip Payara to dir 
+	sudo chown -R vagrant:vagrant ${PAYARA_HOME}    # Make sure vagrant owns dir 
 }
 
 
