@@ -51,10 +51,10 @@ configureOSE() {
 }
 
 
-# Install OpenJDK7 from Ubuntu repos
-installOpenJDK7() {
-	echo "Installing OpenJDK 7"
-	apt-get -qqy install openjdk-7-jdk            # Install OpenJDK 7
+# Install OpenJDK8 from Ubuntu repos
+installOpenJDK8() {
+	echo "Installing OpenJDK 8"
+	apt-get -qqy install openjdk-8-jdk            # Install OpenJDK 8
 }
 
 
@@ -127,7 +127,7 @@ configureOSE
 if [ "$JDK" = "ORACLE" ]; then
    installOracleJDK8
 else
-   installOpenJDK7
+   installOpenJDK8
 fi
 
 installPayara
