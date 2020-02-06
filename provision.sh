@@ -18,17 +18,18 @@ PAYARA_HOME="/opt/payara/payara-${PAYARA_VERSION}"
 case "${PAYARA_VERSION}" in 
 	4.1.2.181)
 		# The below links are to 4.1.2.181
-		FULL=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara/4.1.2.181/payara-4.1.2.181.zip
-		WEB=https://search.maven.org/remotecontent?filepath=fish/payara/blue/distributions/payara-web/4.1.2.181/payara-web-4.1.2.181.zip
-		MINIMAL=
-		MICRO=
-		EMBEDDED_FULL=
-		EMBEDDED_WEB=
-		MULTI_LANGUAGE_FULL=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-ml/4.1.2.181/payara-ml-4.1.2.181.zip
-		MULTI_LANGUAGE_WEB=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-web-ml/4.1.2.181/payara-web-ml-4.1.2.181.zip
+		FULL="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara/4.1.2.181/payara-4.1.2.181.zip"
+		WEB="https://search.maven.org/remotecontent?filepath=fish/payara/blue/distributions/payara-web/4.1.2.181/payara-web-4.1.2.181.zip"
+		MINIMAL=""
+		MICRO=""
+		EMBEDDED_FULL=""
+		EMBEDDED_WEB=""
+		MULTI_LANGUAGE_FULL="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-ml/4.1.2.181/payara-ml-4.1.2.181.zip"
+		MULTI_LANGUAGE_WEB="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-web-ml/4.1.2.181/payara-web-ml-4.1.2.181.zip"
 	;;
-	\*)
-		echo "unknown version number"
+
+\*)
+	echo "unknown version number '${PAYARA_VERSION}'"
 esac
 
 # Payara edition (Full, Web, Micro, etc., from above list)
@@ -74,14 +75,15 @@ installOracleJDK8() {
 # Download and unzip to /opt/payara
 installPayara() {
 	echo "Provisioning Payara-${PAYARA_VERSION} ${PAYARA_ED} to ${PAYARA_HOME}"
-	
-	echo "running update..."
+
+	echo "Running update..."
 	sudo apt-get -qqy update                      # Update the repos 
-	
-	echo "installing openjdk and unzip"
-	sudo apt-get -qqy install openjdk-7-jdk       # Install JDK 7 
+
+	echo "Installing openjdk and unzip"
+	sudo apt-get -qqy install openjdk-8-jdk       # Install JDK 8
 	sudo apt-get -qqy install unzip               # Install unzip 
-	
+	sudo apt-get -qqy install mc                  # Install Midnight Commander
+
 	echo "Downloading Payara ${PAYARA_VERSION}"
 	wget -q ${PAYARA_ED} -O temp.zip > /dev/null    # Download Payara 
 	sudo mkdir -p ${PAYARA_HOME}                    # Make dirs for Payara 
