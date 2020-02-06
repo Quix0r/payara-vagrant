@@ -14,26 +14,25 @@ PAYARA_VERSION="4.1.2.181"
 # Payara directory
 PAYARA_HOME="/opt/payara/payara-${PAYARA_VERSION}"
 
-
 # Payara Edition URLs
 case "${PAYARA_VERSION}" in 
 	4.1.2.181)
 		# The below links are to 4.1.2.181
-		FULL=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara/4.1.2.181/payara-4.1.2.181.zip
-		WEB=https://search.maven.org/remotecontent?filepath=fish/payara/blue/distributions/payara-web/4.1.2.181/payara-web-4.1.2.181.zip
-		MINIMAL=
-		MICRO=
-		EMBEDDED_FULL=
-		EMBEDDED_WEB=
-		MULTI_LANGUAGE_FULL=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-ml/4.1.2.181/payara-ml-4.1.2.181.zip
-		MULTI_LANGUAGE_WEB=https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-web-ml/4.1.2.181/payara-web-ml-4.1.2.181.zip
+		FULL="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara/4.1.2.181/payara-4.1.2.181.zip"
+		WEB="https://search.maven.org/remotecontent?filepath=fish/payara/blue/distributions/payara-web/4.1.2.181/payara-web-4.1.2.181.zip"
+		MINIMAL=""
+		MICRO=""
+		EMBEDDED_FULL=""
+		EMBEDDED_WEB=""
+		MULTI_LANGUAGE_FULL="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-ml/4.1.2.181/payara-ml-4.1.2.181.zip"
+		MULTI_LANGUAGE_WEB="https://search.maven.org/remotecontent?filepath=fish/payara/distributions/payara-web-ml/4.1.2.181/payara-web-ml-4.1.2.181.zip"
 	;;
 	\*)
-	echo "unknown version number"
+		echo "unknown version number"
 esac
 
 # Payara edition (Full, Web, Micro, etc., from above list)
-PAYARA_ED=${FULL}
+PAYARA_ED="${FULL}"
 
 #
 #
@@ -110,7 +109,7 @@ installService() {
 	echo "Adding payara system startup..."
 	update-rc.d payara defaults > /dev/null 
 	
-	echo "starting Payara..."
+	echo "Starting Payara..."
 	
 	# Explicitly start payaradomain by default
 	case "${PAYARA_VERSION}" in
@@ -139,3 +138,4 @@ if [ ${PAYARA_ED} = ${WEB}                 ] ||
    [ ${PAYARA_ED} = ${MULTI_LANGUAGE_WEB}  ]; then
 	installService
 fi
+
