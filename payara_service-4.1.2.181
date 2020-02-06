@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Basic Payara service
+# 
+
+export PAYARA_HOME="/opt/payara/payara-4.1.2.181/payara41"
+
+startDomain() {
+	echo -n "Starting Payara: '$1' "
+	${PAYARA_HOME}/bin/asadmin start-domain "$1"
+}
+
+stopDomain() {
+	echo -n "Stopping Payara: '$1' "
+	${PAYARA_HOME}/bin/asadmin stop-domain "$1"
+}
+
+
+case "$1" in
+start)
+    startDomain "${2:-payaradomain}"
+    ;;
+stop)
+    stopDomain "${2:-payaradomain}"
+    ;;
+restart)
+    ${PAYARA_HOME}/bin/asadmin restart-domain >/dev/null
+    ;;
+\*)
+    echo "usage: $0 (start|stop|restart|help)"
+esac
