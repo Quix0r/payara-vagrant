@@ -18,10 +18,10 @@ stopDomain() {
 
 case "$1" in
 start)
-    startDomain "${2:-payaradomain}"
+    startDomain "${2:-domain1}"
     ;;
 stop)
-    stopDomain "${2:-payaradomain}"
+    stopDomain "${2:-domain1}"
     ;;
 restart)
     ${PAYARA_HOME}/bin/asadmin restart-domain >/dev/null

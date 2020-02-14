@@ -14,6 +14,10 @@ PAYARA_VERSION="4.1.2.181"
 # Payara directory
 PAYARA_HOME="/opt/payara/payara-${PAYARA_VERSION}"
 
+# Temporary ZIP file
+TEMP_ZIP="/home/vagrant/temp.zip"
+TEMP_PWD_FILE="/tmp/pwdfile"
+
 # Payara Edition URLs
 case "${PAYARA_VERSION}" in 
 	4.1.2.181)
@@ -77,42 +81,98 @@ installPayara() {
 	echo "Provisioning Payara-${PAYARA_VERSION} ${PAYARA_ED} to ${PAYARA_HOME}"
 
 	echo "Running update..."
-	sudo apt-get -qqy update                      # Update the repos 
+	sudo apt-get -qqy update
 
-	echo "Installing openjdk and unzip"
-	sudo apt-get -qqy install openjdk-8-jdk       # Install JDK 8
-	sudo apt-get -qqy install unzip               # Install unzip 
-	sudo apt-get -qqy install mc                  # Install Midnight Commander
+	JAVA_BIN=$(which java)
 
-	echo "Downloading Payara ${PAYARA_VERSION}"
-	wget -q ${PAYARA_ED} -O temp.zip > /dev/null    # Download Payara 
-	sudo mkdir -p ${PAYARA_HOME}                    # Make dirs for Payara 
-	unzip -qq temp.zip -d ${PAYARA_HOME}            # unzip Payara to dir 
-	sudo chown -R vagrant:vagrant ${PAYARA_HOME}    # Make sure vagrant owns dir 
+	if [ -z "${JAVA_BIN}" ]
+	then
+		echo "Installing openjdk and unzip"
+		sudo apt-get -y install aptitude || exit 255
+		sudo aptitude -y install openjdk-8-jdk unzip mc || exit 255
+	else
+		echo "OpenJDK already installed."
+	fi
+
+	if [ ! -f "${PAYARA_HOME}/payara41/bin/asadmin" ]
+	then
+		# Make sure temp.zip is really gone
+		sudo rm -f "${TEMP_ZIP}" "${TEMP_ZIP}.md5" 
+		echo "Downloading Payara ${PAYARA_VERSION}"
+		wget -q "${PAYARA_ED}" -O "${TEMP_ZIP}" || exit 255
+		wget -q "${PAYARA_ED}.md5" -O "${TEMP_ZIP}.md5" || exit 255
+
+		echo "Validating download ..."
+		MD5_SUM1=$(md5sum "${PAYARA_ED}" | cut -d " " -f 1)
+		MD5_SUM2=$(cat "${PAYARA_ED}.md5")
+		if [ "${MD5_SUM1}" != "${MD5_SUM2}" ]
+		then
+			echo "MD5 sum '${MD5_SUM1}' doesn't match '${MD5_SUM2}'."
+			exit 255
+		fi
+
+		if [ -d "${PAYARA_HOME}" ]
+		then
+			echo "Removing existing directory ..."
+			sudo rm -rf "${PAYARA_HOME}"
+		fi
+
+		echo "Unzipping Payara ..."
+		sudo mkdir -p "${PAYARA_HOME}"
+		unzip -qq "${TEMP_ZIP}" -d "${PAYARA_HOME}" || exit 255
+		sudo chown -R vagrant:vagrant "${PAYARA_HOME}"
+		sudo rm -f "${TEMP_ZIP}" "${TEMP_ZIP}.md5"
+	else
+		echo "Payara was found."
+	fi
 }
 
 
 # Copy startup script, and create service
 installService() {
-	echo "installing startup scripts"
-	mkdir -p ${PAYARA_HOME}/startup                 # Make dirs for Payara
-	cp /vagrant/payara_service-${PAYARA_VERSION} ${PAYARA_HOME}/startup/
-	chmod +x ${PAYARA_HOME}/startup/payara_service-${PAYARA_VERSION}
-	ln -s ${PAYARA_HOME}/startup/payara_service-${PAYARA_VERSION} /etc/init.d/payara
-	
+	echo "Installing startup scripts"
+	mkdir -p "${PAYARA_HOME}/startup"                    # Make dirs for Payara 
+	cp "/vagrant/payara_service-${PAYARA_VERSION}" "${PAYARA_HOME}/startup/" || exit 255
+	chmod +x "${PAYARA_HOME}/startup/payara_service-${PAYARA_VERSION}" || exit 255
+	sudo ln -sf "${PAYARA_HOME}/startup/payara_service-${PAYARA_VERSION}" /etc/init.d/payara
+	sudo ln -sf "${PAYARA_HOME}/payara41/glassfish/domains/domain1" /home/vagrant/domain1
+
 	echo "Adding payara system startup..."
-	update-rc.d payara defaults > /dev/null 
-	
-	echo "Starting Payara..."
-	
-	# Explicitly start payaradomain by default
+	sudo update-rc.d payara defaults > /dev/null 
+
+	# echo "Starting Payara..."
+
+	# Start default domain
 	case "${PAYARA_VERSION}" in
 		4.1.2.181)
-			su - vagrant -c 'service payara start payaradomain'
+			sudo /etc/init.d/payara start
 			;;
 		/*)
 			echo "Unknown Payara version, attempting to start domain1..."
-			su - vagrant -c 'service payara start domain1'
+			sudo /etc/init.d/payara start
+	esac
+
+	echo "Setting logín 'admin' and password 'vagrant' ..."
+	echo "AS_ADMIN_PASSWORD=" > "${TEMP_PWD_FILE}"
+	echo "AS_ADMIN_NEWPASSWORD=vagrant" >> "${TEMP_PWD_FILE}"
+	"${PAYARA_HOME}/payara41/bin/asadmin" --host localhost --port 4848 --user admin --passwordfile="${TEMP_PWD_FILE}" change-admin-password || exit 255
+	rm -f "${TEMP_PWD_FILE}"
+
+	# Enable secure admin
+	echo "AS_ADMIN_PASSWORD=vagrant" > "${TEMP_PWD_FILE}"
+	"${PAYARA_HOME}/payara41/bin/asadmin" --host localhost --port 4848 --user admin --passwordfile="${TEMP_PWD_FILE}" enable-secure-admin || exit 255
+	rm -f "${TEMP_PWD_FILE}"
+
+	# Restart default domain
+	case "${PAYARA_VERSION}" in
+		4.1.2.181)
+			sudo /etc/init.d/payara stop || exit 255
+			sudo /etc/init.d/payara start
+			;;
+		/*)
+			echo "Unknown Payara version, attempting to start domain1..."
+			sudo /etc/init.d/payara stop || exit 255
+			sudo /etc/init.d/payara start
 	esac
 }
 
